@@ -1,0 +1,6 @@
+{
+    "enabled": {
+      "HelloPlugin": true,
+      "MathPlugin": true
+    }
+  }

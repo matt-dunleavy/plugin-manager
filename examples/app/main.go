@@ -12,7 +12,7 @@ import (
 
 func main() {
     // Create a new plugin manager
-    manager, err := pm.NewManager("../config.json", "../plugins")
+    manager, err := pm.NewManager("../plugins.json", "../plugins")
     if err != nil {
         log.Fatalf("Failed to create plugin manager: %v", err)
     }

@@ -1,9 +1,12 @@
+// File: internal/plugin/manager.go
+
 package pluginmanager
 
 import (
     "fmt"
     "sync"
     "time"
+    "path/filepath"
 )
 
 type Manager struct {
@@ -168,7 +171,7 @@ func (m *Manager) DisablePlugin(name string) error {
 func (m *Manager) LoadEnabledPlugins(pluginDir string) error {
     enabled := m.config.EnabledPlugins()
     for _, name := range enabled {
-        path := fmt.Sprintf("%s/%s.so", pluginDir, name)
+        path := filepath.Join(pluginDir, name+".so")
         if err := m.LoadPlugin(path); err != nil {
             return err
         }
@@ -199,10 +202,6 @@ func (m *Manager) dfs(name string, visited map[string]bool) error {
     return nil
 }
 
-func (m *Manager) GetEventBus() *EventBus {
-    return m.eventBus
-}
-
 func (m *Manager) ListPlugins() []string {
     m.mu.RLock()
     defer m.mu.RUnlock()
@@ -214,12 +213,17 @@ func (m *Manager) ListPlugins() []string {
     return plugins
 }
 
-func (m *Manager) GetPluginStats(name string) *PluginStats {
+func (m *Manager) GetPluginStats(name string) (*PluginStats, error) {
     m.mu.RLock()
     defer m.mu.RUnlock()
     
-    if stats, ok := m.stats[name]; ok {
-        return stats
+    stats, ok := m.stats[name]
+    if !ok {
+        return nil, ErrPluginNotFound
     }
-    return nil
+    return stats, nil
+}
+
+func (m *Manager) SubscribeToEvent(eventName string, handler EventHandler) {
+    m.eventBus.Subscribe(eventName, handler)
 }

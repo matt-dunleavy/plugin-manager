@@ -12,13 +12,18 @@ import (
 type PluginMetadata struct {
     Name         string
     Version      string
-    Dependencies []string
+    Dependencies map[string]string
+    GoVersion    string
+    Signature    []byte
 }
 
 type Plugin interface {
     Metadata() PluginMetadata
+    PreLoad() error
     Init() error
+    PostLoad() error
     Execute() error
+    PreUnload() error
     Shutdown() error
 }
 
@@ -33,17 +38,17 @@ const PluginSymbol = "Plugin"
 func LoadPlugin(path string) (Plugin, error) {
     p, err := plugin.Open(path)
     if err != nil {
-        return nil, err
+        return nil, &PluginError{Op: "open", Err: err}
     }
 
     symPlugin, err := p.Lookup(PluginSymbol)
     if err != nil {
-        return nil, err
+        return nil, &PluginError{Op: "lookup", Err: err}
     }
 
     plugin, ok := symPlugin.(Plugin)
     if !ok {
-        return nil, ErrInvalidPluginInterface
+        return nil, &PluginError{Op: "assert", Err: ErrInvalidPluginInterface}
     }
 
     return plugin, nil

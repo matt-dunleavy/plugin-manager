@@ -4,7 +4,10 @@
 
 package pluginmanager
 
-import "errors"
+import (
+    "errors"
+    "fmt"
+)
 
 var (
     ErrPluginAlreadyLoaded    = errors.New("plugin already loaded")
@@ -15,3 +18,20 @@ var (
     ErrCircularDependency     = errors.New("circular plugin dependency detected")
     ErrPluginSandboxViolation = errors.New("plugin attempted to violate sandbox")
 )
+
+type PluginError struct {
+    Op     string
+    Err    error
+    Plugin string
+}
+
+func (e *PluginError) Error() string {
+    if e.Plugin != "" {
+        return fmt.Sprintf("plugin error: %s: %s: %v", e.Plugin, e.Op, e.Err)
+    }
+    return fmt.Sprintf("plugin error: %s: %v", e.Op, e.Err)
+}
+
+func (e *PluginError) Unwrap() error {
+    return e.Err
+}

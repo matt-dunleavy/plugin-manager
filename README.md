@@ -1,6 +1,6 @@
 # Plugin Manager for Go
 
-A flexible and robust plugin management system for Go applications.
+A flexible and robust plugin management library for Go applications.
 
 ## Features
 
@@ -10,6 +10,14 @@ A flexible and robust plugin management system for Go applications.
 - Event system for plugin lifecycle events
 - Basic sandboxing for improved security
 - Metrics collection for plugin performance
+
+## Installation
+
+To use this plugin manager in your Go project, run:
+
+```bash
+go get github.com/matt-dunleavy/plugin-manager
+```
 
 ## Installation
 
@@ -83,7 +91,6 @@ import (
 )
 
 func main() {
-    
     // Create a new plugin manager
     manager, err := pm.NewManager("plugins.json", "./plugins")
     if err != nil {
@@ -115,7 +122,7 @@ func main() {
     }
 
     // Subscribe to plugin events
-    manager.GetEventBus().Subscribe("PluginLoaded", func(e pm.Event) {
+    manager.SubscribeToEvent("PluginLoaded", func(e pm.Event) {
         fmt.Printf("Plugin loaded: %s\n", e.(pm.PluginLoadedEvent).PluginName)
     })
 }
@@ -136,19 +143,19 @@ The plugin manager uses a JSON configuration file to keep track of enabled plugi
 
 ## API Reference
 
-- ### Manager
+### Manager
 
-  - `NewManager(configPath string, pluginDir string) (*Manager, error)`
-  - `LoadPlugin(path string) error`
-  - `UnloadPlugin(name string) error`
-  - `ExecutePlugin(name string) error`
-  - `HotReload(name string, path string) error`
-  - `EnablePlugin(name string) error`
-  - `DisablePlugin(name string) error`
-  - `LoadEnabledPlugins(pluginDir string) error`
-  - `ListPlugins() []string`
-  - `GetPluginStats(name string) (*PluginStats, error)`
-  - `SubscribeToEvent(eventName string, handler EventHandler)`
+- `NewManager(configPath string, pluginDir string) (*Manager, error)`
+- `LoadPlugin(path string) error`
+- `UnloadPlugin(name string) error`
+- `ExecutePlugin(name string) error`
+- `HotReload(name string, path string) error`
+- `EnablePlugin(name string) error`
+- `DisablePlugin(name string) error`
+- `LoadEnabledPlugins(pluginDir string) error`
+- `ListPlugins() []string`
+- `GetPluginStats(name string) (*PluginStats, error)`
+- `SubscribeToEvent(eventName string, handler EventHandler)`
 
 ### EventBus
 

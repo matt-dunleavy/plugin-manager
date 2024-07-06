@@ -7,7 +7,7 @@ package pluginmanager
 import (
     "os"
     "path/filepath"
-    "log"
+    "syscall"
 )
 
 type Sandbox interface {
@@ -16,38 +16,68 @@ type Sandbox interface {
     VerifyPluginPath(path string) error
 }
 
-type DefaultSandbox struct {
-    pluginDir string
+type LinuxSandbox struct {
+    originalDir  string
+    originalUmask int
+    chrootDir    string
 }
 
-func NewDefaultSandbox(pluginDir string) *DefaultSandbox {
-    absPath, err := filepath.Abs(pluginDir)
+func NewLinuxSandbox(chrootDir string) *LinuxSandbox {
+    if chrootDir == "" {
+        chrootDir = "./sandbox"
+    }
+    return &LinuxSandbox{
+        chrootDir: chrootDir,
+    }
+}
+
+func (s *LinuxSandbox) Enable() error {
+    var err error
+    s.originalDir, err = os.Getwd()
     if err != nil {
-        log.Printf("Error getting absolute path for plugin directory: %v", err)
-        return &DefaultSandbox{pluginDir: pluginDir}
+        return err
     }
-    return &DefaultSandbox{
-        pluginDir: absPath,
+
+    if err := os.MkdirAll(s.chrootDir, 0755); err != nil {
+        return err
     }
-}
 
-func (s *DefaultSandbox) Enable() error {
-    return os.Chdir(s.pluginDir)
-}
+    if err := syscall.Chroot(s.chrootDir); err != nil {
+        return err
+    }
 
-func (s *DefaultSandbox) Disable() error {
+    if err := os.Chdir("/"); err != nil {
+        return err
+    }
+
+    s.originalUmask = syscall.Umask(0)
+
     return nil
 }
 
-func (s *DefaultSandbox) VerifyPluginPath(path string) error {
+func (s *LinuxSandbox) Disable() error {
+    syscall.Umask(s.originalUmask)
+
+    if err := syscall.Chroot("."); err != nil {
+        return err
+    }
+
+    if err := os.Chdir(s.originalDir); err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func (s *LinuxSandbox) VerifyPluginPath(path string) error {
     absPath, err := filepath.Abs(path)
     if err != nil {
         return err
     }
-    
-    if !filepath.HasPrefix(absPath, s.pluginDir) {
+
+    if !filepath.HasPrefix(absPath, s.chrootDir) {
         return ErrPluginSandboxViolation
     }
-    
+
     return nil
 }

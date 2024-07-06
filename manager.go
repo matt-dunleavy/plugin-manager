@@ -198,3 +198,28 @@ func (m *Manager) dfs(name string, visited map[string]bool) error {
     visited[name] = false
     return nil
 }
+
+func (m *Manager) GetEventBus() *EventBus {
+    return m.eventBus
+}
+
+func (m *Manager) ListPlugins() []string {
+    m.mu.RLock()
+    defer m.mu.RUnlock()
+    
+    plugins := make([]string, 0, len(m.plugins))
+    for name := range m.plugins {
+        plugins = append(plugins, name)
+    }
+    return plugins
+}
+
+func (m *Manager) GetPluginStats(name string) *PluginStats {
+    m.mu.RLock()
+    defer m.mu.RUnlock()
+    
+    if stats, ok := m.stats[name]; ok {
+        return stats
+    }
+    return nil
+}

@@ -1,3 +1,5 @@
+// File: examples/app/main.go
+
 package main
 
 import (
@@ -10,51 +12,50 @@ import (
 
 func main() {
     // Create a new plugin manager
-    manager, err := pm.NewManager("../plugins.json", "../plugins")
+    manager, err := pm.NewManager("../config.json", "../plugins")
     if err != nil {
         log.Fatalf("Failed to create plugin manager: %v", err)
     }
 
     // Subscribe to plugin events
-    manager.GetEventBus().Subscribe("PluginLoaded", func(e pm.Event) {
+    manager.EventBus.Subscribe("PluginLoaded", func(e pm.Event) {
         fmt.Printf("Event: Plugin loaded - %s\n", e.(pm.PluginLoadedEvent).PluginName)
     })
-    manager.GetEventBus().Subscribe("PluginUnloaded", func(e pm.Event) {
+    manager.EventBus.Subscribe("PluginUnloaded", func(e pm.Event) {
         fmt.Printf("Event: Plugin unloaded - %s\n", e.(pm.PluginUnloadedEvent).PluginName)
     })
 
     // Load plugins
-    err = manager.LoadPlugin("../plugins/hello.so")
-    if err != nil {
-        log.Printf("Failed to load hello plugin: %v", err)
-    }
-
-    err = manager.LoadPlugin("../plugins/math.so")
-    if err != nil {
-        log.Printf("Failed to load math plugin: %v", err)
+    pluginsToLoad := []string{"hello.so", "math.so"}
+    for _, plugin := range pluginsToLoad {
+        err := manager.LoadPlugin(fmt.Sprintf("../plugins/%s", plugin))
+        if err != nil {
+            log.Printf("Failed to load plugin %s: %v", plugin, err)
+        }
     }
 
     // List loaded plugins
-    plugins := manager.ListPlugins()
-    fmt.Println("Loaded plugins:", plugins)
+    loadedPlugins := manager.ListPlugins()
+    fmt.Println("Loaded plugins:", loadedPlugins)
 
     // Execute plugins
-    err = manager.ExecutePlugin("HelloPlugin")
-    if err != nil {
-        log.Printf("Failed to execute HelloPlugin: %v", err)
-    }
-
-    err = manager.ExecutePlugin("MathPlugin")
-    if err != nil {
-        log.Printf("Failed to execute MathPlugin: %v", err)
+    pluginsToExecute := []string{"HelloPlugin", "MathPlugin"}
+    for _, plugin := range pluginsToExecute {
+        err := manager.ExecutePlugin(plugin)
+        if err != nil {
+            log.Printf("Failed to execute %s: %v", plugin, err)
+        }
     }
 
     // Get plugin stats
-    helloStats := manager.GetPluginStats("HelloPlugin")
-    mathStats := manager.GetPluginStats("MathPlugin")
-
-    fmt.Printf("HelloPlugin stats: %+v\n", helloStats)
-    fmt.Printf("MathPlugin stats: %+v\n", mathStats)
+    for _, plugin := range pluginsToExecute {
+        stats, err := manager.GetPluginStats(plugin)
+        if err != nil {
+            fmt.Printf("%s stats not available: %v\n", plugin, err)
+        } else {
+            fmt.Printf("%s stats: %+v\n", plugin, stats)
+        }
+    }
 
     // Hot-reload HelloPlugin
     time.Sleep(2 * time.Second) // Wait to simulate some time passing
@@ -71,13 +72,12 @@ func main() {
     }
 
     // Unload plugins
-    err = manager.UnloadPlugin("HelloPlugin")
-    if err != nil {
-        log.Printf("Failed to unload HelloPlugin: %v", err)
+    for _, plugin := range loadedPlugins {
+        err := manager.UnloadPlugin(plugin)
+        if err != nil {
+            log.Printf("Failed to unload %s: %v", plugin, err)
+        }
     }
 
-    err = manager.UnloadPlugin("MathPlugin")
-    if err != nil {
-        log.Printf("Failed to unload MathPlugin: %v", err)
-    }
+    fmt.Println("\nFinal list of loaded plugins:", manager.ListPlugins())
 }

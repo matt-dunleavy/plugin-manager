@@ -1,6 +1,6 @@
-# Go Plugin Manager
+# Plugin Manager for Go
 
-A robust and flexible plugin management system for Go applications.
+A flexible and robust plugin management system for Go applications.
 
 ## Features
 
@@ -83,8 +83,9 @@ import (
 )
 
 func main() {
+    
     // Create a new plugin manager
-    manager, err := pm.NewManager("config.json", "./plugins")
+    manager, err := pm.NewManager("plugins.json", "./plugins")
     if err != nil {
         log.Fatalf("Failed to create plugin manager: %v", err)
     }
@@ -122,7 +123,7 @@ func main() {
 
 ## Configuration
 
-The plugin manager uses a JSON configuration file to keep track of enabled plugins. Here's an example `config.json`:
+The plugin manager uses a JSON configuration file to keep track of enabled plugins. Here's an example `plugins.json`:
 
 ```json
 {
@@ -135,16 +136,19 @@ The plugin manager uses a JSON configuration file to keep track of enabled plugi
 
 ## API Reference
 
-### Manager
+- ### Manager
 
-- `NewManager(configPath string, pluginDir string) (*Manager, error)`
-- `LoadPlugin(path string) error`
-- `UnloadPlugin(name string) error`
-- `ExecutePlugin(name string) error`
-- `HotReload(name string, path string) error`
-- `EnablePlugin(name string) error`
-- `DisablePlugin(name string) error`
-- `LoadEnabledPlugins(pluginDir string) error`
+  - `NewManager(configPath string, pluginDir string) (*Manager, error)`
+  - `LoadPlugin(path string) error`
+  - `UnloadPlugin(name string) error`
+  - `ExecutePlugin(name string) error`
+  - `HotReload(name string, path string) error`
+  - `EnablePlugin(name string) error`
+  - `DisablePlugin(name string) error`
+  - `LoadEnabledPlugins(pluginDir string) error`
+  - `ListPlugins() []string`
+  - `GetPluginStats(name string) (*PluginStats, error)`
+  - `SubscribeToEvent(eventName string, handler EventHandler)`
 
 ### EventBus
 

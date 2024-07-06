@@ -1,3 +1,7 @@
+// Copyright (C) 2024 Matt Dunleavy. All rights reserved.
+// Use of this source code is subject to the MIT license 
+// that can be found in the LICENSE file.
+
 package pluginmanager
 
 import "errors"

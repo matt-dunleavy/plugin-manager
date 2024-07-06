@@ -3,6 +3,7 @@ package pluginmanager
 import (
     "os"
     "path/filepath"
+    "log"
 )
 
 type Sandbox interface {
@@ -16,8 +17,13 @@ type DefaultSandbox struct {
 }
 
 func NewDefaultSandbox(pluginDir string) *DefaultSandbox {
+    absPath, err := filepath.Abs(pluginDir)
+    if err != nil {
+        log.Printf("Error getting absolute path for plugin directory: %v", err)
+        return &DefaultSandbox{pluginDir: pluginDir}
+    }
     return &DefaultSandbox{
-        pluginDir: pluginDir,
+        pluginDir: absPath,
     }
 }
 

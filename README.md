@@ -16,7 +16,7 @@ A robust and flexible plugin management system for Go applications.
 To use this plugin manager in your Go project, run:
 
 ```bash
-go get github.com/roguedynamic/plugin-manager
+go get github.com/matt-dunleavy/plugin-manager
 ```
 
 ## Usage
@@ -30,7 +30,7 @@ package main
 
 import (
     "fmt"
-    pm "github.com/roguedynamic/plugin-manager"
+    pm "github.com/matt-dunleavy/plugin-manager"
 )
 
 type MyPlugin struct{}
@@ -79,7 +79,7 @@ package main
 import (
     "fmt"
     "log"
-    pm "github.com/roguedynamic/plugin-manager"
+    pm "github.com/matt-dunleavy/plugin-manager"
 )
 
 func main() {

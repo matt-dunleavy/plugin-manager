@@ -1,6 +1,6 @@
 # <img src="assets/img/plugin-manager-go-256.png" style="float:right"/>Plugin Manager for Go
 
-A robust plugin management library for Go applications.
+A robust and flexible plugin management library for Go applications.
 
 ##### Features
 
@@ -56,9 +56,9 @@ manager, err := pm.NewManager("plugins.json", "./plugins", "public_key.pem")
 
 **Parameters:**
 
-- `configPath` (string): Path to the JSON configuration file for managing enabled/disabled plugins.
-- `pluginDir` (string): Directory where plugins are stored.
-- `publicKeyPath` (string): Path to the public key file used for verifying plugin signatures.
+- `configPath` (string): Path to the JSON configuration file for managing enabled/disabled plugins. ("plugins.json")
+- `pluginDir` (string): Directory where plugins are stored. ("./plugins")
+- `publicKeyPath` (string): Path to the public key file used for verifying plugin signatures. ("public_key.pem")
 
 **Returns:**
 
@@ -167,16 +167,19 @@ manager.SubscribeToEvent("PluginLoaded", func(e pm.Event) {
 
 Plugins must implement the `Plugin` interface.
 
+#### Plugin (struct)
+
+The `Plugin` struct defines the basic structure of your plugin. It can be empty if your plugin doesn't need to store any state, or you can add fields if your plugin needs to maintain state across method calls.
+
 ```go
-package main
-
-import (
-    "fmt"
-    pm "github.com/matt-dunleavy/plugin-manager"
-)
-
 type MyPlugin struct{}
+```
 
+#### Metadata()
+
+The `Metadata()` method returns metadata about the plugin, including the `Name`, `Version`, and `Dependencies` (a map of other plugins that this plugin depends on, with the key being the plugin's name, and the value being the version constraint).
+
+```go
 func (p *MyPlugin) Metadata() pm.PluginMetadata {
     return pm.PluginMetadata{
         Name:         "MyPlugin",
@@ -184,37 +187,79 @@ func (p *MyPlugin) Metadata() pm.PluginMetadata {
         Dependencies: map[string]string{},
     }
 }
+```
 
+#### Preload()
+
+The `Preload()` method is called before the plugin is fully loaded. Use it for any setup that needs to happen before initialization.
+
+```go
 func (p *MyPlugin) PreLoad() error {
     fmt.Println("MyPlugin pre-load")
     return nil
 }
+```
 
+#### Init()
+
+The `Init()` method is called to initialize the plugin. Use it to set up any resources or state the plugin needs.
+
+```go
 func (p *MyPlugin) Init() error {
     fmt.Println("MyPlugin initialized")
     return nil
 }
+```
 
+#### PostLoad()
+
+The `PostLoad()` method is called after the plugin is fully loaded. Use it for any final setup steps.
+
+```go
 func (p *MyPlugin) PostLoad() error {
     fmt.Println("MyPlugin post-load")
     return nil
 }
+```
 
+#### Execute()
+
+`Execute()` is the main method of your plugin. It is called when the plugin manager executes your plugin.
+
+```go
 func (p *MyPlugin) Execute() error {
     fmt.Println("MyPlugin executed")
     return nil
 }
+```
 
+#### PreUnload()
+
+The `PreUnload()` method is called before the plugin is unloaded. Use it to prepare for shutdown.
+
+```Go
 func (p *MyPlugin) PreUnload() error {
     fmt.Println("MyPlugin pre-unload")
     return nil
 }
+```
 
+#### Shutdown()
+
+The `Shutdown()` method is called when the plugin is being unloaded. Use it to clean up any resources the plugin has allocated.
+
+```Go
 func (p *MyPlugin) Shutdown() error {
     fmt.Println("MyPlugin shut down")
     return nil
 }
+```
 
+#### Plugin Variable
+
+This variable is how the plugin manager discovers your plugin. It must be named `Plugin` and be of the type that implements the plugin interface.
+
+```go
 var Plugin MyPlugin
 ```
 
@@ -226,17 +271,13 @@ var Plugin MyPlugin
 >
 > When implementing your own plugin, you would replace the `fmt.Println` statements with your actual plugin logic. The `PreLoad`, `PostLoad`, `PreUnload`, and `Shutdown` methods allow you to manage the lifecycle of your plugin, while `Init` and `Execute` form the core functionality.
 
-
-
 ## Compiling Plugins
 
-Compile your plugin with the standard Go toolchain by setting the `-buildmode` flag to `plugin`:
+Compile a plugin using the standard Go compiler toolchain by setting the `-buildmode` flag to `plugin`:
 
 ```bash
 go build -buildmode=plugin -o myplugin.so myplugin.go
 ```
-
-
 
 ## Configuration
 
@@ -279,46 +320,28 @@ The plugin manager uses a JSON configuration file to keep track of enabled plugi
 
 ### Step-by-Step Guide to Implementing and Deploying Redbean
 
-1. ##### **Initialize the Plugin Manager**
-
-```go
-manager, err := pm.NewManager("plugins.json", "./plugins", "public_key.pem")
-if err != nil {
-    log.Fatalf("Failed to create plugin manager: %v", err)
-}
-```
-
-2. ##### **Setup the Remote Repository**
+#### **Setup a Remote Repository**
 
 ```go
 repo, err := manager.SetupRemoteRepository("user@example.com:/path/to/repo", "/path/to/ssh/key")
-if err != nil {
-    log.Fatalf("Failed to setup remote repository: %v", err)
-}
 ```
 
-3. ##### **Prepare Local Directory for Deployment**.
-   
-   Create a local directory to store your plugins and repository structure:
+#### Prepare Local Directory for Deployment
+
+Create a local directory to store your plugins and repository structure:
 
 ```go
 localRepoPath := "./repository"
-if err := os.MkdirAll(localRepoPath, 0755); err != nil {
-    log.Fatalf("Failed to create local repository directory: %v", err)
-}
 ```
 
-4. ##### **Add Plugins to the Local Repository.**
+#### **Add Plugins to the Local Repository.**
 
-  Copy or move your plugin files to the local repository directory.
+Copy or move your plugin files to the local repository directory.
 
-5. ##### **Deploy the Repository**
+#### **Deploy the Repository**
 
 ```go
 err = manager.DeployRepository(repo, localRepoPath)
-if err != nil {
-	log.Fatalf("Failed to deploy repository: %v", err)
-}
 ```
 This step will:
 
@@ -326,9 +349,9 @@ This step will:
 - Package your plugins and repository structure into a Redbean executable
 - Deploy the Redbean executable to your remote server (if a remote URL was provided)
 
-6. ##### **Verify Deployment**
+#### **Verify Deployment**
 
-  If deployed remotely, SSH into your server and check that the Redbean executable is present and running:
+If deployed remotely, SSH into your server and check that the Redbean executable is present and running:
 
   ```bash
   ssh user@example.com
@@ -336,17 +359,17 @@ This step will:
   ps aux | grep redbean
   ```
 
-  ##### **Access Your Plugin Repository**
+  #### **Access Your Plugin Repository**
 
-  Your plugins are now accessible via HTTP/HTTPS. If Redbean is running on the default port, you can access your plugins at: `http://your-server-address:8080/plugins/`
+ Your plugins are now accessible via HTTP/HTTPS. If Redbean is running on the default port, you can access your plugins at: `http://your-server-address:8080/plugins/`
 
-##### **Update Repository**
+#### **Update Repository**
 
 To update your repository, simply repeat steps 4-5. The plugin manager will handle updating the Redbean executable and redeploying your changes.
 
-#### Advanced Configuration
+### Advanced Configuration
 
-Redbean offers various configuration options. You can create a `redbean.ini` file in your local repository directory to customize settings:
+When deploying your plugin repository via redbean, the plugin manager will include a `redbean.ini` file that you can use to customize your repository's server configuration.
 
 ```ini
 [server]
@@ -354,7 +377,7 @@ port = 9000
 addr = 127.0.0.1
 ```
 
-The plugin manager will include this configuration when deploying your repository.
+Refer to the [redbean.ini reference](docs/redbean.md) for a comprehensive list of commands.
 
 > [!IMPORTANT]
 >

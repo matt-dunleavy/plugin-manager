@@ -1,4 +1,4 @@
-# <img src="assets/img/plugin-manager-go-256.png" style="float:right"/>Plugin Manager for Go
+# Plugin Manager for Go
 
 A robust and flexible plugin management library for Go applications.
 
